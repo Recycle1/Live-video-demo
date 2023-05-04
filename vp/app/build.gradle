@@ -1,0 +1,125 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    compileSdkVersion 30
+    buildToolsVersion "30.0.3"
+    splits {
+        abi {
+            enable true
+            reset()
+            include 'armeabi' //select ABIs to build APKs for
+            universalApk true //generate an additional APK that contains all the ABIs
+        }
+    }
+
+    defaultConfig {
+        applicationId "com.ffmpeg.push"
+        minSdkVersion 21
+        targetSdkVersion 30
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        ndk {
+            abiFilters 'armeabi'//, 'x86_64', 'arm64-v8a', mips, mips64...加入需要生成的文件夹
+        }
+    }
+
+//    tasks.withType(JavaCompile) {
+//        compileTask -> compileTask.dependsOn 'ndkBuild', 'copyJniLibs'
+//    }
+
+    sourceSets {
+        main {
+            jni.srcDirs = ['src/main/jni']
+            jniLibs.srcDirs = ['src/main/obj/local']
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+//    tasks.withType(JavaCompile) {
+//        compileTask -> compileTask.dependsOn ndkBuild
+//    }
+
+
+    ndkVersion '22.1.7171670'
+
+//    // call regular ndk-build(.cmd) script from app directory
+//    task ndkBuild(type: Exec) {
+//        workingDir file('src/main')
+//        //commandLine getNdkBuildCmd()
+//        commandLine 'D:/android/sdk/ndk/22.1.7171670/build/ndk-build.cmd'   //也可以直接使用绝对路径
+//    }
+//
+//    task cleanNative(type: Exec) {
+//        workingDir file('src/main')
+//        commandLine 'D:/android/sdk/ndk/22.1.7171670/build/ndk-build.cmd', 'clean'
+//    }
+//
+//    clean.dependsOn cleanNative
+}
+
+//// call regular ndk-build(.cmd) script from app directory
+//task ndkBuild(type: Exec) {
+//    workingDir file('src/main')
+//    //commandLine getNdkBuildCmd()
+//    commandLine 'D:/android/sdk/ndk-bundle/build/ndk-build.cmd'   //也可以直接使用绝对路径
+//}
+
+//task cleanNative(type: Exec) {
+//    workingDir file('src/main')
+//    commandLine 'D:/android/sdk/ndk-bundle/build/ndk-build.cmd', 'clean'
+//}
+
+//task copyJniLibs(type: Copy) {
+//    from fileTree(dir: file(buildDir.absolutePath + '/ndk/libs'), include: '**/*.so')
+//    into file('src/main/jni')
+//}
+
+//获取NDK目录路径
+def getNdkDir() {
+    if (System.env.ANDROID_NDK_ROOT != null)
+        return System.env.ANDROID_NDK_ROOT
+
+    Properties properties = new Properties()
+    properties.load(project.rootProject.file('local.properties').newDataInputStream())
+    def ndkdir = properties.getProperty('ndk.dir', null)
+    if (ndkdir == null)
+        throw new GradleException("NDK location not found. Define location with ndk.dir in the local.properties file or with an ANDROID_NDK_ROOT environment variable.")
+
+    return ndkdir
+}
+
+//根据不同系统获取ndk-build脚本
+//def getNdkBuildCmd() {
+//    def ndkbuild = getNdkDir() + "/ndk-build"
+//    if (Os.isFamily(Os.FAMILY_WINDOWS))
+//        ndkbuild += ".cmd"
+//
+//    return ndkbuild
+//}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'com.google.android.material:material:1.2.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.1'
+    implementation project(path: ':library')
+    implementation project(path: ':vitamio')
+    testImplementation 'junit:junit:4.+'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+}
